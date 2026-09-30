@@ -1,0 +1,529 @@
+{
+  "schemaVersion": "1.0.0",
+  "modelVersion": "lanzhou-interval-hazard-2026.09",
+  "generatedAt": "2026-09-29T15:09:36.877020+00:00",
+  "sourceFingerprint": {
+    "sha256": "40df35ed6f37bbabaa9425e70615fba25a42f5454313896a934dea2167b9b133",
+    "rowCount": 24316,
+    "subjectCount": 10259,
+    "dateMin": "2018-10-15",
+    "dateMax": "2024-12-27"
+  },
+  "horizonYears": 3.0,
+  "algorithm": {
+    "family": "interval-censored-piecewise-exponential",
+    "link": "cloglog",
+    "alpha": 0.01,
+    "formula": "p_interval = 1 - exp(-exp(intercept + beta*x) * delta_years)",
+    "formulaVersion": "interval-constant-hazard-v1",
+    "selection": "validation interval NLL; subject-level stratified split"
+  },
+  "intercept": -3.2696798353529894,
+  "features": [
+    {
+      "name": "age",
+      "kind": "continuous",
+      "center": 43.05951895637994,
+      "scale": 10.654313432294096,
+      "impute": 43,
+      "clipLow": 23,
+      "clipHigh": 72,
+      "missingIndicator": false,
+      "observedMin": 18,
+      "observedMax": 79,
+      "p01": 23,
+      "p99": 72,
+      "label": "age",
+      "unit": null,
+      "coefficient": 0.10197220689758793
+    },
+    {
+      "name": "sex",
+      "kind": "binary",
+      "encoding": {
+        "女": 0,
+        "男": 1
+      },
+      "center": 0.0,
+      "scale": 1.0,
+      "impute": 1,
+      "missingIndicator": false,
+      "observedMin": 0,
+      "observedMax": 1,
+      "p01": 0,
+      "p99": 1,
+      "label": "生理性别",
+      "unit": null,
+      "coefficient": 0.0739319087546476
+    },
+    {
+      "name": "hypertension_history",
+      "kind": "binary",
+      "encoding": {
+        "无": 0,
+        "有": 1
+      },
+      "center": 0.0,
+      "scale": 1.0,
+      "impute": 0,
+      "missingIndicator": false,
+      "observedMin": 0,
+      "observedMax": 1,
+      "p01": 0,
+      "p99": 1,
+      "label": "既往高血压史",
+      "unit": null,
+      "coefficient": 0.21051626894058592
+    },
+    {
+      "name": "BMI",
+      "kind": "continuous",
+      "center": 23.726981247452102,
+      "scale": 3.1014120249668204,
+      "impute": 23.53,
+      "clipLow": 17.3044,
+      "clipHigh": 32.80359999999997,
+      "missingIndicator": true,
+      "observedMin": 0.22,
+      "observedMax": 326.53,
+      "p01": 17.3044,
+      "p99": 32.80359999999997,
+      "label": "BMI",
+      "unit": null,
+      "coefficient": 0.041220943541365664,
+      "missingIndicatorCoefficient": -0.11586444257644242
+    },
+    {
+      "name": "glucose",
+      "kind": "continuous",
+      "center": 4.87562485731757,
+      "scale": 0.5785963424087355,
+      "impute": 4.8,
+      "clipLow": 3.73,
+      "clipHigh": 6.748899999999995,
+      "missingIndicator": false,
+      "observedMin": 2.46,
+      "observedMax": 6.99,
+      "p01": 3.73,
+      "p99": 6.748899999999995,
+      "label": "glucose",
+      "unit": null,
+      "coefficient": 0.01373866334297423
+    },
+    {
+      "name": "TG",
+      "kind": "continuous",
+      "center": 1.6067603546677536,
+      "scale": 0.9487861666714253,
+      "impute": 1.37,
+      "clipLow": 0.47,
+      "clipHigh": 5.8934000000000015,
+      "missingIndicator": true,
+      "observedMin": 0.2,
+      "observedMax": 15.6,
+      "p01": 0.47,
+      "p99": 5.8934000000000015,
+      "label": "TG",
+      "unit": null,
+      "coefficient": 0.08453816700824641,
+      "missingIndicatorCoefficient": -2.196330023963114
+    },
+    {
+      "name": "HDL",
+      "kind": "continuous",
+      "center": 1.2955126375866286,
+      "scale": 0.33078960270069824,
+      "impute": 1.25,
+      "clipLow": 0.69,
+      "clipHigh": 2.37,
+      "missingIndicator": true,
+      "observedMin": 0.38,
+      "observedMax": 3.92,
+      "p01": 0.69,
+      "p99": 2.37,
+      "label": "HDL",
+      "unit": null,
+      "coefficient": 0.03192519970568737,
+      "missingIndicatorCoefficient": 2.225746306240169
+    },
+    {
+      "name": "temperature_mean_365d",
+      "kind": "continuous",
+      "center": 7.929516214838973,
+      "scale": 0.2823839477542378,
+      "impute": 7.8235,
+      "clipLow": 7.4709,
+      "clipHigh": 8.6133,
+      "missingIndicator": false,
+      "observedMin": 7.4382,
+      "observedMax": 8.7075,
+      "p01": 7.4709,
+      "p99": 8.6133,
+      "label": "temperature_mean_365d",
+      "unit": null,
+      "coefficient": -0.25582299059377445
+    },
+    {
+      "name": "temperature_variability_sd_365d",
+      "kind": "continuous",
+      "center": 9.59813098593559,
+      "scale": 0.5436360203898136,
+      "impute": 9.4171,
+      "clipLow": 8.946566,
+      "clipHigh": 10.6843,
+      "missingIndicator": false,
+      "observedMin": 8.839,
+      "observedMax": 10.6843,
+      "p01": 8.946566,
+      "p99": 10.6843,
+      "label": "temperature_variability_sd_365d",
+      "unit": null,
+      "coefficient": 0.6363897732657225
+    },
+    {
+      "name": "HW_P95_D3_heatwave_days_365d",
+      "kind": "continuous",
+      "center": 7.618426416632695,
+      "scale": 8.813089418486237,
+      "impute": 3,
+      "clipLow": 0,
+      "clipHigh": 24,
+      "missingIndicator": false,
+      "observedMin": 0,
+      "observedMax": 28,
+      "p01": 0,
+      "p99": 24,
+      "label": "HW_P95_D3_heatwave_days_365d",
+      "unit": null,
+      "coefficient": 0.03492366600443806
+    },
+    {
+      "name": "CS_P5_D3_coldspell_days_365d",
+      "kind": "continuous",
+      "center": 12.918161434977579,
+      "scale": 10.812824385027243,
+      "impute": 10,
+      "clipLow": 0,
+      "clipHigh": 32,
+      "missingIndicator": false,
+      "observedMin": 0,
+      "observedMax": 32,
+      "p01": 0,
+      "p99": 32,
+      "label": "CS_P5_D3_coldspell_days_365d",
+      "unit": null,
+      "coefficient": -0.15158962037661405
+    },
+    {
+      "name": "CMA_coldwave_onsets_365d",
+      "kind": "continuous",
+      "center": 2.54443538524256,
+      "scale": 1.844981574155173,
+      "impute": 2,
+      "clipLow": 0,
+      "clipHigh": 5,
+      "missingIndicator": false,
+      "observedMin": 0,
+      "observedMax": 6,
+      "p01": 0,
+      "p99": 5,
+      "label": "CMA_coldwave_onsets_365d",
+      "unit": null,
+      "coefficient": 0.015946265113664974
+    },
+    {
+      "name": "PM25_cumavg_lag1",
+      "kind": "continuous",
+      "center": 36.068313009478196,
+      "scale": 2.0348637109396432,
+      "impute": 35.900001,
+      "clipLow": 29.05,
+      "clipHigh": 40.700001,
+      "missingIndicator": true,
+      "observedMin": 26.875,
+      "observedMax": 44.433334,
+      "p01": 29.05,
+      "p99": 40.700001,
+      "label": "PM25_cumavg_lag1",
+      "unit": null,
+      "coefficient": 0.002632361497666674,
+      "missingIndicatorCoefficient": -0.44659700535863583
+    }
+  ],
+  "defaultEnvironment": {
+    "selection": "observed-row-nearest-2024-median",
+    "candidateCount": 6514,
+    "visitDate": "2024-05-22",
+    "weatherWindowStart": "2023-05-23",
+    "weatherWindowEnd": "2024-05-21",
+    "pollutionWindow": {
+      "startYear": 2019,
+      "endYear": 2023,
+      "nYears": 5
+    },
+    "values": {
+      "temperature_mean_365d": 8.5877,
+      "temperature_variability_sd_365d": 10.1195,
+      "DTR_mean_365d": 13.1088,
+      "DTR_sd_365d": 5.0736,
+      "humidity_mean_365d": 58.1653,
+      "wind_speed_mean_365d": 1.9257,
+      "HW_P95_D3_heatwave_days_365d": 11,
+      "HW_P95_D3_heatwave_events_365d": 3,
+      "HW_P95_D3_heatwave_intensity_c_days_365d": 15.1,
+      "CS_P5_D3_coldspell_days_365d": 20,
+      "CS_P5_D3_coldspell_events_365d": 3,
+      "CS_P5_D3_coldspell_intensity_c_days_365d": 61.1,
+      "CMA_coldwave_onsets_365d": 6,
+      "CO_cumavg_lag1": 0.876,
+      "NO2_cumavg_lag1": 42.940001,
+      "O3_cumavg_lag1": 96.860001,
+      "PM10_cumavg_lag1": 93.040001,
+      "PM25_cumavg_lag1": 37.500001,
+      "SO2_cumavg_lag1": 16.76
+    },
+    "provenance": {
+      "candidateCount": 6514,
+      "algorithm": "IQR-scaled Euclidean distance to candidate medians; ties use stable date, window-bound, and environment-value ordering"
+    }
+  },
+  "trainingSummary": {
+    "seed": 20260929,
+    "intervalCount": 14055,
+    "eventIntervalCount": 1017,
+    "sourceSubjectCount": 10259,
+    "eligibleIntervalSubjectCount": 10258,
+    "subjects": {
+      "train": 7180,
+      "validation": 1538,
+      "test": 1541
+    },
+    "intervals": {
+      "train": 9812,
+      "validation": 2090,
+      "test": 2153
+    },
+    "quality": {
+      "sameOrNegativeDayGaps": 2,
+      "positiveDayGaps": 14055,
+      "candidateIntervals": 14057
+    },
+    "landmarkCounts": {
+      "train": {
+        "positive": 336,
+        "negative": 3972,
+        "censored_before_H": 2546,
+        "interval_straddles_H": 326
+      },
+      "test": {
+        "positive": 75,
+        "negative": 893,
+        "censored_before_H": 500,
+        "interval_straddles_H": 73
+      }
+    },
+    "missingRates": {
+      "age": 0,
+      "BMI": 0.03740317977986139,
+      "glucose": 0,
+      "TG": 0.09631064003261312,
+      "HDL": 0.09580105992662047,
+      "temperature_mean_365d": 0,
+      "temperature_variability_sd_365d": 0,
+      "HW_P95_D3_heatwave_days_365d": 0,
+      "CS_P5_D3_coldspell_days_365d": 0,
+      "CMA_coldwave_onsets_365d": 0,
+      "PM25_cumavg_lag1": 0.221667346106808
+    },
+    "validationCandidates": [
+      {
+        "alpha": 0.01,
+        "validationNll": 0.26357207507691555
+      },
+      {
+        "alpha": 0.1,
+        "validationNll": 0.26359251558567826
+      },
+      {
+        "alpha": 1.0,
+        "validationNll": 0.26360671147160863
+      },
+      {
+        "alpha": 10.0,
+        "validationNll": 0.2636473207582362
+      }
+    ]
+  },
+  "evaluation": {
+    "intervalTest": {
+      "n": 2153,
+      "eventCount": 154,
+      "nll": 0.2641743074514767,
+      "totalExposureYears": 4655.413868867943,
+      "meanPredicted": 0.0730828044934801,
+      "observedEventFraction": 0.07152810032512773
+    },
+    "landmark3Year": {
+      "status": "descriptive-test-subset",
+      "counts": {
+        "positive": 75,
+        "negative": 893,
+        "censored_before_H": 500,
+        "interval_straddles_H": 73
+      },
+      "metrics": {
+        "n": 968,
+        "positiveCount": 75,
+        "negativeCount": 893,
+        "calibration10Bin": [
+          {
+            "bin": 1,
+            "lower": 0,
+            "upper": 0.06840121165711625,
+            "n": 102,
+            "eventCount": 5,
+            "positiveRate": 0.049019607843137254,
+            "predictedMean": 0.06308282672303087,
+            "observedRate": 0.049019607843137254
+          },
+          {
+            "bin": 2,
+            "lower": 0.06840121165711625,
+            "upper": 0.07309669425362547,
+            "n": 73,
+            "eventCount": 5,
+            "positiveRate": 0.0684931506849315,
+            "predictedMean": 0.07087075664923019,
+            "observedRate": 0.0684931506849315
+          },
+          {
+            "bin": 3,
+            "lower": 0.07309669425362547,
+            "upper": 0.0770463985599828,
+            "n": 92,
+            "eventCount": 7,
+            "positiveRate": 0.07608695652173914,
+            "predictedMean": 0.07504991323960829,
+            "observedRate": 0.07608695652173914
+          },
+          {
+            "bin": 4,
+            "lower": 0.0770463985599828,
+            "upper": 0.08104177975310004,
+            "n": 100,
+            "eventCount": 4,
+            "positiveRate": 0.04,
+            "predictedMean": 0.07902254217711399,
+            "observedRate": 0.04
+          },
+          {
+            "bin": 5,
+            "lower": 0.08104177975310004,
+            "upper": 0.08513648584694491,
+            "n": 119,
+            "eventCount": 8,
+            "positiveRate": 0.06722689075630252,
+            "predictedMean": 0.08313898777027981,
+            "observedRate": 0.06722689075630252
+          },
+          {
+            "bin": 6,
+            "lower": 0.08513648584694491,
+            "upper": 0.0893830209071096,
+            "n": 91,
+            "eventCount": 5,
+            "positiveRate": 0.054945054945054944,
+            "predictedMean": 0.08729682811866268,
+            "observedRate": 0.054945054945054944
+          },
+          {
+            "bin": 7,
+            "lower": 0.0893830209071096,
+            "upper": 0.09418305810324157,
+            "n": 98,
+            "eventCount": 6,
+            "positiveRate": 0.061224489795918366,
+            "predictedMean": 0.09147541969467674,
+            "observedRate": 0.061224489795918366
+          },
+          {
+            "bin": 8,
+            "lower": 0.09418305810324157,
+            "upper": 0.10120621174032492,
+            "n": 99,
+            "eventCount": 6,
+            "positiveRate": 0.06060606060606061,
+            "predictedMean": 0.09758091805223824,
+            "observedRate": 0.06060606060606061
+          },
+          {
+            "bin": 9,
+            "lower": 0.10120621174032492,
+            "upper": 0.11490362943210626,
+            "n": 106,
+            "eventCount": 7,
+            "positiveRate": 0.0660377358490566,
+            "predictedMean": 0.10725980167824989,
+            "observedRate": 0.0660377358490566
+          },
+          {
+            "bin": 10,
+            "lower": 0.11490362943210626,
+            "upper": 1,
+            "n": 88,
+            "eventCount": 22,
+            "positiveRate": 0.25,
+            "predictedMean": 0.14205919032653372,
+            "observedRate": 0.25
+          }
+        ],
+        "auroc": 0.6225158641284061,
+        "auprc": 0.31260236914682676,
+        "brier": 0.06861120607284121,
+        "positiveRate": 0.07747933884297521,
+        "ece": 0.03195935837880312,
+        "bootstrap": {
+          "requested": 200,
+          "effective": 200,
+          "ci95": {
+            "auroc": [
+              0.5260443248728186,
+              0.6904139680998737
+            ],
+            "auprc": [
+              0.18246072718399442,
+              0.40415334516216156
+            ],
+            "brier": [
+              0.056267629912889826,
+              0.07904855612072828
+            ]
+          },
+          "note": null
+        }
+      },
+      "calibrationReference": "train landmark predictions; fixed empirical deciles"
+    }
+  },
+  "researchQuantiles": {
+    "q33": 0.07997775100142844,
+    "q67": 0.0997964251788698,
+    "source": "train-subject predictions; names are research quantiles",
+    "referencePopulation": "train subjects with a valid first non-event interval; no 3-year label filtering",
+    "labels": [
+      "较低研究分位",
+      "中间研究分位",
+      "较高研究分位"
+    ]
+  },
+  "limitations": [
+    "研究估计不是临床概率或诊断结果。",
+    "模型使用相邻随访区间和固定 3 年研究期限；未观察到事件不自动视为任意未来期限阴性。",
+    "环境值为历史资料窗口的研究情景，不代表实时天气或个体因果暴露。",
+    "glucose 需处于训练数据范围且小于 7；已确诊者不进入新发事件研究估计。",
+    "指标来自单一历史队列的受试者隔离内部评估，未经过外部队列验证。",
+    "严格 landmark 指标只覆盖可判定 test 子集，不能外推为全人群 3 年校准。",
+    "系数贡献表示模型关联方向，不是因果效应，也不表示改变某项会带来同等风险变化。",
+    "部分实验室和污染物单位沿用原表状态；本工作台不提供健康建议、干预阈值或实时趋势。"
+  ]
+}
