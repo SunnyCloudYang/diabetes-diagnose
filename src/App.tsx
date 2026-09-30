@@ -24,6 +24,7 @@ import {
   type ModelResult,
   type RawModelInput,
 } from "./model";
+import { ResultInsights } from "./ResultInsights";
 
 type View = "assessment" | "method";
 type FormData = {
@@ -56,6 +57,8 @@ function App() {
   const [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [furthestStep, setFurthestStep] = useState<0 | 1 | 2 | 3>(0);
   const ageInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLElement>(null);
 
@@ -82,6 +85,7 @@ function App() {
 
   const update = (key: keyof FormData, value: string) => {
     setForm((current) => ({ ...current, [key]: value }));
+    setFurthestStep(step);
     setResult(null);
     setErrors([]);
     setWarnings([]);
@@ -91,6 +95,8 @@ function App() {
     setResult(null);
     setErrors([]);
     setWarnings([]);
+    setStep(0);
+    setFurthestStep(0);
   };
   const useExample = () => {
     setForm({
@@ -106,6 +112,8 @@ function App() {
     setResult(null);
     setErrors([]);
     setWarnings([]);
+    setStep(0);
+    setFurthestStep(0);
   };
   const calculate = () => {
     if (!artifact) {
@@ -131,6 +139,7 @@ function App() {
       setResult(inferModel(artifact, input));
       setErrors([]);
       setWarnings(validation.warnings);
+      setStep(3);
     } catch (error: unknown) {
       setErrors([error instanceof Error ? error.message : "模型推断失败。"]);
       setResult(null);
@@ -236,10 +245,24 @@ function App() {
           resultRef={resultRef}
           onUpdate={update}
           onCalculate={calculate}
+          onValidationErrors={(nextErrors) => {
+            setErrors(nextErrors);
+            setWarnings([]);
+          }}
+          step={step}
+          furthestStep={furthestStep}
+          onStepChange={(nextStep) => {
+            setStep(nextStep);
+            setFurthestStep(
+              (current) => Math.max(current, nextStep) as 0 | 1 | 2 | 3,
+            );
+            setErrors([]);
+          }}
           onReset={reset}
           onExample={useExample}
           onEdit={() => {
             setResult(null);
+            setStep(0);
             requestAnimationFrame(() => ageInputRef.current?.focus());
           }}
         />
@@ -283,6 +306,10 @@ type AssessmentProps = {
   resultRef: React.RefObject<HTMLElement | null>;
   onUpdate: (key: keyof FormData, value: string) => void;
   onCalculate: () => void;
+  onValidationErrors: (errors: string[]) => void;
+  step: 0 | 1 | 2 | 3;
+  furthestStep: 0 | 1 | 2 | 3;
+  onStepChange: (step: 0 | 1 | 2 | 3) => void;
   onReset: () => void;
   onExample: () => void;
   onEdit: () => void;
@@ -298,11 +325,161 @@ function Assessment({
   resultRef,
   onUpdate,
   onCalculate,
+  onValidationErrors,
+  step,
+  furthestStep,
+  onStepChange,
   onReset,
   onExample,
   onEdit,
 }: AssessmentProps) {
+  const questionRef = useRef<HTMLDivElement>(null);
+  const previousPage = useRef(step);
+  const hadResult = useRef(Boolean(result));
+  useEffect(() => {
+    if (!result && (previousPage.current !== step || hadResult.current)) {
+      questionRef.current?.focus({ preventScroll: true });
+      questionRef.current?.scrollIntoView({
+        block: "nearest",
+        behavior: "auto",
+      });
+    }
+    previousPage.current = step;
+    hadResult.current = Boolean(result);
+  }, [step, result]);
   const environment = artifact?.defaultEnvironment;
+  const steps = ["基本信息", "体检指标", "血脂", "核对计算"];
+  const validateCurrentStep = () => {
+    const nextErrors: string[] = [];
+    const number = (value: string) =>
+      value.trim() === "" ? null : Number(value);
+    const requireNumber = (value: string, label: string) => {
+      const parsed = number(value);
+      if (parsed === null || !Number.isFinite(parsed)) {
+        nextErrors.push(`请填写有效的${label}。`);
+      }
+      return parsed;
+    };
+
+    if (step === 0) {
+      const age = requireNumber(form.age, "年龄");
+      if (age !== null && Number.isFinite(age) && (age < 0 || age > 120)) {
+        nextErrors.push("年龄应在 0–120 岁范围内。");
+      }
+      if (!form.sex) nextErrors.push("请选择生理性别。");
+      if (!form.hypertensionHistory) nextErrors.push("请选择既往高血压史。");
+    }
+    if (step === 1) {
+      const glucose = requireNumber(form.glucose, "血糖 glucose");
+      if (glucose !== null && Number.isFinite(glucose) && glucose < 0) {
+        nextErrors.push("血糖不能为负数。");
+      }
+      if (glucose !== null && Number.isFinite(glucose) && glucose >= 7) {
+        nextErrors.push(
+          "血糖 glucose ≥ 7，超出无事件起点训练域，本演示不适用。",
+        );
+      }
+      const bmi = number(form.bmi);
+      if (bmi !== null && (!Number.isFinite(bmi) || bmi < 0)) {
+        nextErrors.push("BMI 应为非负数，或留空由训练集规则插补。");
+      }
+      if (!form.diagnosedStatus) nextErrors.push("请选择是否已有糖尿病诊断。");
+      else if (form.diagnosedStatus !== "否")
+        nextErrors.push(
+          "当前已确诊或确诊状态不确定，不进入新发事件研究估计。请结合原始报告咨询医生。",
+        );
+    }
+    if (step === 2) {
+      const tgEmpty = form.triglycerides.trim() === "";
+      const hdlEmpty = form.hdl.trim() === "";
+      if (tgEmpty !== hdlEmpty) {
+        nextErrors.push("TG 与 HDL 需同时填写或同时留空。");
+      }
+      if (!tgEmpty) {
+        const tg = requireNumber(form.triglycerides, "甘油三酯 TG");
+        const hdl = requireNumber(form.hdl, "高密度脂蛋白 HDL");
+        if (tg !== null && Number.isFinite(tg) && tg < 0) {
+          nextErrors.push("甘油三酯 TG 不能为负数。");
+        }
+        if (hdl !== null && Number.isFinite(hdl) && hdl < 0) {
+          nextErrors.push("高密度脂蛋白 HDL 不能为负数。");
+        }
+      }
+    }
+    const pageFields = [
+      [["age", form.age, "年龄"]],
+      [
+        ["glucose", form.glucose, "血糖"],
+        ["BMI", form.bmi, "BMI"],
+      ],
+      [
+        ["TG", form.triglycerides, "TG"],
+        ["HDL", form.hdl, "HDL"],
+      ],
+      [],
+    ][step];
+    for (const [name, raw, label] of pageFields) {
+      if (!raw.trim()) continue;
+      const value = Number(raw);
+      const feature = artifact?.features.find((item) => item.name === name);
+      if (
+        Number.isFinite(value) &&
+        feature &&
+        ((feature.observedMin != null && value < feature.observedMin) ||
+          (feature.observedMax != null && value > feature.observedMax))
+      ) {
+        nextErrors.push(
+          `${label}超出训练起点观测范围（${feature.observedMin}–${feature.observedMax}）。`,
+        );
+      }
+    }
+    onValidationErrors(nextErrors);
+    return nextErrors.length === 0;
+  };
+  const nextStep = () => {
+    if (!validateCurrentStep()) return;
+    if (step < 3) {
+      onStepChange((step + 1) as 0 | 1 | 2 | 3);
+    } else {
+      onCalculate();
+    }
+  };
+  const handleStepClick = (target: number) => {
+    if (target <= furthestStep && (target <= step || validateCurrentStep())) {
+      onStepChange(target as 0 | 1 | 2 | 3);
+    }
+  };
+
+  if (result && artifact) {
+    return (
+      <main className="workspace" id="top">
+        <div className="page-toolbar">
+          <div>
+            <div className="breadcrumb">研究工具 / 风险估计</div>
+            <h1>3 年研究估计</h1>
+          </div>
+          <span className="toolbar-note">固定历史环境 · 本地推断</span>
+        </div>
+        <section
+          className="result-page-wide"
+          ref={resultRef}
+          tabIndex={-1}
+          aria-label="计算结果"
+        >
+          <ResultPanel
+            form={form}
+            result={result}
+            artifact={artifact}
+            warnings={warnings}
+            onEdit={onEdit}
+            onReset={onReset}
+          />
+          <ResultInsights form={form} result={result} artifact={artifact} />
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="workspace" id="top">
       <div className="page-toolbar">
@@ -318,7 +495,7 @@ function Assessment({
             className="panel panel-form"
             onSubmit={(event) => {
               event.preventDefault();
-              onCalculate();
+              nextStep();
             }}
           >
             <div className="panel-head">
@@ -330,132 +507,186 @@ function Assessment({
                 必填
               </span>
             </div>
-            <div className="form-block">
+            <StepProgress
+              labels={steps}
+              current={step}
+              furthest={furthestStep}
+              onSelect={handleStepClick}
+            />
+            <div className="step-question" ref={questionRef} tabIndex={-1}>
+              <span>第 {step + 1} / 4 步</span>
               <h3>
-                <span>01</span>基本信息
+                {
+                  [
+                    "你的基本信息是什么？",
+                    "最近一次体检指标是什么？",
+                    "血脂指标是否可用？",
+                    "核对输入与固定环境",
+                  ][step]
+                }
               </h3>
-              <div className="field-grid three">
-                <Field id="age" label="年龄" required unit="岁">
-                  <input
-                    ref={ageInputRef}
-                    id="age"
-                    type="number"
-                    min="0"
-                    max="120"
-                    inputMode="numeric"
-                    placeholder="例如 42"
-                    value={form.age}
-                    onChange={(event) => onUpdate("age", event.target.value)}
-                  />
-                </Field>
-                <ChoiceField
-                  label="生理性别"
-                  required
-                  options={["女", "男"]}
-                  value={form.sex}
-                  onChange={(value) => onUpdate("sex", value)}
-                />
-                <ChoiceField
-                  label="既往高血压史"
-                  required
-                  options={["无", "有"]}
-                  value={form.hypertensionHistory}
-                  onChange={(value) => onUpdate("hypertensionHistory", value)}
-                />
-              </div>
             </div>
-            <div className="form-block">
-              <h3>
-                <span>02</span>体检指标 <small>原表单位待确认</small>
-              </h3>
-              <div className="field-grid three">
-                <Field
-                  id="glucose"
-                  label="血糖 glucose"
-                  required
-                  helper="原表单位待确认"
-                >
-                  <input
+            {step === 0 && (
+              <div className="form-block step-block">
+                <div className="field-grid three">
+                  <Field id="age" label="年龄" required unit="岁">
+                    <input
+                      ref={ageInputRef}
+                      id="age"
+                      type="number"
+                      min="0"
+                      max="120"
+                      inputMode="numeric"
+                      placeholder="例如 42"
+                      value={form.age}
+                      onChange={(event) => onUpdate("age", event.target.value)}
+                    />
+                  </Field>
+                  <ChoiceField
+                    label="生理性别"
+                    required
+                    options={["女", "男"]}
+                    value={form.sex}
+                    onChange={(value) => onUpdate("sex", value)}
+                  />
+                  <ChoiceField
+                    label="既往高血压史"
+                    required
+                    options={["无", "有"]}
+                    value={form.hypertensionHistory}
+                    onChange={(value) => onUpdate("hypertensionHistory", value)}
+                  />
+                </div>
+              </div>
+            )}
+            {step === 1 && (
+              <div className="form-block step-block">
+                <div className="field-grid three">
+                  <Field
                     id="glucose"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="必填"
-                    value={form.glucose}
-                    onChange={(event) =>
-                      onUpdate("glucose", event.target.value)
-                    }
-                  />
-                </Field>
-                <Field id="bmi" label="BMI" helper="可留空">
-                  <input
-                    id="bmi"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="可选"
-                    value={form.bmi}
-                    onChange={(event) => onUpdate("bmi", event.target.value)}
-                  />
-                </Field>
-                <Field id="diagnosed" label="已有糖尿病诊断" required>
-                  <SelectField
-                    id="diagnosed"
-                    ariaLabel="是否已有糖尿病诊断"
-                    value={form.diagnosedStatus}
-                    onChange={(value) => onUpdate("diagnosedStatus", value)}
-                    options={["否", "是", "不确定"]}
-                  />
-                </Field>
-                <Field id="tg" label="甘油三酯 TG" helper="与 HDL 成对填写">
-                  <input
-                    id="tg"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="可选"
-                    value={form.triglycerides}
-                    onChange={(event) =>
-                      onUpdate("triglycerides", event.target.value)
-                    }
-                  />
-                </Field>
-                <Field
-                  id="hdl"
-                  label="高密度脂蛋白 HDL"
-                  helper="与 TG 成对填写"
-                >
-                  <input
-                    id="hdl"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="可选"
-                    value={form.hdl}
-                    onChange={(event) => onUpdate("hdl", event.target.value)}
-                  />
-                </Field>
+                    label="血糖 glucose"
+                    required
+                    helper="原表单位待确认"
+                  >
+                    <input
+                      id="glucose"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      placeholder="必填"
+                      value={form.glucose}
+                      onChange={(event) =>
+                        onUpdate("glucose", event.target.value)
+                      }
+                    />
+                  </Field>
+                  <Field id="bmi" label="BMI" helper="可留空">
+                    <input
+                      id="bmi"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      placeholder="可选"
+                      value={form.bmi}
+                      onChange={(event) => onUpdate("bmi", event.target.value)}
+                    />
+                  </Field>
+                  <Field id="diagnosed" label="已有糖尿病诊断" required>
+                    <SelectField
+                      id="diagnosed"
+                      ariaLabel="是否已有糖尿病诊断"
+                      value={form.diagnosedStatus}
+                      onChange={(value) => onUpdate("diagnosedStatus", value)}
+                      options={["否", "是", "不确定"]}
+                    />
+                  </Field>
+                </div>
               </div>
-            </div>
-            <details className="environment-details">
-              <summary>
-                <span>
-                  <CloudSun size={16} />
-                  固定历史环境情景
-                </span>
-                <b>
-                  {environment
-                    ? `${environment.visitDate} · 365 天`
-                    : "模型载入后显示"}
-                </b>
-                <ChevronDown size={16} />
-              </summary>
-              {environment && <EnvironmentDetails artifact={artifact} />}
-            </details>
+            )}
+            {step === 2 && (
+              <div className="form-block step-block">
+                <div className="field-grid two">
+                  <Field
+                    id="tg"
+                    label="甘油三酯 TG"
+                    helper="与 HDL 同时填写或同时留空"
+                  >
+                    <input
+                      id="tg"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      placeholder="可选"
+                      value={form.triglycerides}
+                      onChange={(event) =>
+                        onUpdate("triglycerides", event.target.value)
+                      }
+                    />
+                  </Field>
+                  <Field
+                    id="hdl"
+                    label="高密度脂蛋白 HDL"
+                    helper="与 TG 同时填写或同时留空"
+                  >
+                    <input
+                      id="hdl"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      placeholder="可选"
+                      value={form.hdl}
+                      onChange={(event) => onUpdate("hdl", event.target.value)}
+                    />
+                  </Field>
+                </div>
+                <p className="step-note">
+                  血脂单位和检测条件请以原始体检报告为准。
+                </p>
+              </div>
+            )}
+            {step === 3 && (
+              <div className="form-block step-block review-block">
+                <div className="review-grid">
+                  <Metric
+                    label="年龄 / 性别"
+                    value={`${form.age || "—"} / ${form.sex || "—"}`}
+                  />
+                  <Metric
+                    label="高血压史"
+                    value={form.hypertensionHistory || "—"}
+                  />
+                  <Metric label="血糖 glucose" value={form.glucose || "—"} />
+                  <Metric label="BMI" value={form.bmi || "训练规则插补"} />
+                  <Metric
+                    label="TG / HDL"
+                    value={`${form.triglycerides || "插补"} / ${form.hdl || "插补"}`}
+                  />
+                  <Metric
+                    label="已有诊断"
+                    value={form.diagnosedStatus || "—"}
+                  />
+                </div>
+                <details className="environment-details">
+                  <summary>
+                    <span>
+                      <CloudSun size={16} />
+                      固定历史环境情景
+                    </span>
+                    <b>
+                      {environment
+                        ? `${environment.visitDate} · 365 天`
+                        : "模型载入后显示"}
+                    </b>
+                    <ChevronDown size={16} />
+                  </summary>
+                  {environment && <EnvironmentDetails artifact={artifact} />}
+                </details>
+              </div>
+            )}
             {(modelError || errors.length > 0) && (
               <AlertBox
                 tone="error"
@@ -468,27 +699,39 @@ function Assessment({
               <AlertBox tone="warning" items={[...new Set(warnings)]} />
             )}
             <div className="form-footer">
-              <button
-                className="button button-quiet"
-                type="button"
-                onClick={onExample}
-              >
-                <Sparkles size={15} />
-                载入合成人工示例
-              </button>
-              <div className="footer-actions">
-                <button
-                  className="button button-quiet"
-                  type="button"
-                  onClick={onReset}
-                >
-                  <RotateCcw size={15} />
-                  重置
-                </button>
-                <button className="button button-primary" type="submit">
-                  <Activity size={16} />
-                  计算 3 年估计
-                </button>
+              <div className="form-pagination">
+                {step === 0 ? (
+                  <button
+                    className="button button-quiet"
+                    type="button"
+                    onClick={onExample}
+                  >
+                    <Sparkles size={15} />
+                    载入合成人工示例
+                  </button>
+                ) : (
+                  <button
+                    className="button button-quiet"
+                    type="button"
+                    onClick={() => onStepChange((step - 1) as 0 | 1 | 2 | 3)}
+                  >
+                    上一步
+                  </button>
+                )}
+                <div className="footer-actions">
+                  <button
+                    className="button button-quiet"
+                    type="button"
+                    onClick={onReset}
+                  >
+                    <RotateCcw size={15} />
+                    重置
+                  </button>
+                  <button className="button button-primary" type="submit">
+                    <Activity size={16} />
+                    {step === 3 ? "计算 3 年估计" : "下一步"}
+                  </button>
+                </div>
               </div>
             </div>
             <div className="form-footnote">
@@ -497,27 +740,41 @@ function Assessment({
             </div>
           </form>
         </section>
-        <aside
-          className="result-column"
-          ref={resultRef}
-          tabIndex={-1}
-          aria-label="计算结果"
-        >
-          {result && artifact ? (
-            <ResultPanel
-              form={form}
-              result={result}
-              artifact={artifact}
-              warnings={warnings}
-              onEdit={onEdit}
-              onReset={onReset}
-            />
-          ) : (
-            <EmptyResult artifact={artifact} />
-          )}
+        <aside className="result-column" aria-label="计算结果">
+          <EmptyResult artifact={artifact} />
         </aside>
       </div>
     </main>
+  );
+}
+
+function StepProgress({
+  labels,
+  current,
+  furthest,
+  onSelect,
+}: {
+  labels: string[];
+  current: number;
+  furthest: number;
+  onSelect: (step: number) => void;
+}) {
+  return (
+    <nav className="step-progress" aria-label="输入步骤">
+      {labels.map((label, index) => (
+        <button
+          key={label}
+          type="button"
+          className={index === current ? "step-current" : ""}
+          aria-current={index === current ? "step" : undefined}
+          disabled={index > furthest}
+          onClick={() => onSelect(index)}
+        >
+          <span>{index + 1}</span>
+          {label}
+        </button>
+      ))}
+    </nav>
   );
 }
 
@@ -932,7 +1189,12 @@ function Method({ artifact }: { artifact: ModelArtifact | null }) {
             </summary>
             <ul>
               {(artifact?.limitations ?? ["模型文件尚未载入。"]).map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item}>
+                  {item.replace(
+                    "不提供健康建议",
+                    "仅提供一般健康教育，不提供个体化治疗建议",
+                  )}
+                </li>
               ))}
             </ul>
           </details>

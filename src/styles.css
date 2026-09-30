@@ -300,10 +300,14 @@ summary:focus-visible {
 .field-grid.three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+.field-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .field {
   min-width: 0;
   display: grid;
   align-content: start;
+  align-items: start;
   gap: 7px;
 }
 .choice-field {
@@ -441,6 +445,89 @@ summary:focus-visible {
   gap: 8px;
   font-weight: 600;
 }
+.step-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 17px 0 5px;
+  border-bottom: 1px solid var(--line);
+}
+.step-progress button {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 4px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--quiet);
+  font-size: 12px;
+  text-align: left;
+}
+.step-progress button:not(:disabled):hover {
+  color: var(--blue-dark);
+}
+.step-progress button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.step-progress button.step-current {
+  color: var(--blue-dark);
+  border-bottom-color: var(--blue);
+  font-weight: 650;
+}
+.step-progress button span {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--quiet);
+  font: 11px var(--mono);
+}
+.step-progress button.step-current span {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+}
+.step-question {
+  padding: 24px 0 8px;
+}
+.step-question > span {
+  color: var(--blue);
+  font: 12px var(--mono);
+}
+.step-question h3 {
+  margin: 7px 0 0;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.step-block {
+  min-height: 165px;
+  padding-top: 17px;
+}
+.step-note {
+  margin: 18px 0 0;
+  color: var(--quiet);
+  font-size: 12px;
+}
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 17px;
+  padding-bottom: 4px;
+}
+.review-grid .metric {
+  border-top: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+}
 .environment-details summary > span svg {
   color: var(--blue);
 }
@@ -542,6 +629,13 @@ summary:focus-visible {
   gap: 16px;
   padding-top: 19px;
 }
+.form-pagination {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
 .footer-actions,
 .result-buttons {
   display: flex;
@@ -600,6 +694,21 @@ summary:focus-visible {
 }
 .result-column:focus {
   outline: none;
+}
+.result-page-wide {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  scroll-margin-top: 76px;
+}
+.result-page-wide:focus {
+  outline: none;
+}
+.result-page-wide .result-stack {
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  align-items: stretch;
 }
 .empty-result {
   padding: 25px;
@@ -1044,5 +1153,51 @@ summary:focus-visible {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+.step-question {
+  scroll-margin-top: 76px;
+}
+.step-question:focus {
+  outline: none;
+}
+.form-pagination .button {
+  white-space: nowrap;
+}
+@media (max-width: 860px) {
+  .result-page-wide .result-stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .input-column + .result-column {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .step-progress button {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    min-height: 66px;
+    white-space: nowrap;
+    padding: 8px 0;
+  }
+  .step-progress button:disabled {
+    opacity: 0.75;
+  }
+  .form-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .form-pagination .footer-actions {
+    width: 100%;
+  }
+  .form-pagination .footer-actions .button-primary {
+    flex: 1;
+  }
+  .review-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
